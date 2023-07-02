@@ -1,0 +1,83 @@
+version: "3.8"
+services:
+
+  program:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    depends_on:
+      - opensearch-index
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: "localhost:24224"
+        fluentd-async: "true"
+        fluentd-sub-second-precision: "true"
+    networks:
+      - example
+    ports:
+      - "8080:80"
+
+  opensearch-index:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch-index
+    environment:
+      - cluster.name=opensearch-index-cluster
+      - node.name=opensearch-index
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    expose:
+      - "9200"
+      - "9600"
+    ports:
+      - "9200:9200"
+    networks:
+      - example
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - "opensearch-vol:/usr/share/opensearch/data"
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: opensearch-dashboards
+    depends_on:
+      - opensearch-index
+    environment:
+      - OPENSEARCH_HOSTS=["https://opensearch-index:9200"]
+      - "OPENSEARCH_JAVA_OPTS=-Xms256m -Xmx256m"
+    expose:
+      - "5601"
+    networks:
+      - example
+    ports:
+      - "5601:5601"
+
+  fluentd:
+    image: registry.gitlab.com/insay/docker-image-fluentd-opensearch:latest
+    container_name: fluentd
+    depends_on:
+      - opensearch-index
+    expose:
+      - "24224"
+    networks:
+      - example
+    ports:
+      - "127.0.0.1:24224:24224/tcp"
+      - "127.0.0.1:24224:24224/udp"
+    volumes:
+      - "./config/fluentd/fluent-local.conf:/fluentd/etc/fluent.conf:ro"
+
+volumes:
+  opensearch-vol:
+    name: opensearch-vol
+
+networks:
+  example:
+    name: example
