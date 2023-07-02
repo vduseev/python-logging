@@ -10,10 +10,6 @@ Vagiz Duseev
 
 vagiz@duseev\.com
 
-![](img/python-logging0.png)
-
-![](img/python-logging1.png)
-
 # Why logging is a problem?
 
 First\, it starts very simple
@@ -164,4 +160,3 @@ vagiz@duseev\.com
 ![](img/python-logging24.png)
 
 ![](img/python-logging25.png)
-
